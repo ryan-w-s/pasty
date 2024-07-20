@@ -1,11 +1,8 @@
-extern crate diesel;
-
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use dotenv::dotenv;
 use std::env;
-use chrono::Utc;
 
 mod models;
 mod schema;
@@ -17,11 +14,10 @@ type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 
 #[post("/pastes")]
 async fn create_paste(pool: web::Data<DbPool>, paste: web::Json<NewPaste>) -> impl Responder {
-    let conn = pool.get().expect("couldn't get db connection from pool");
+    let mut conn = pool.get().expect("couldn't get db connection from pool");
 
     let new_paste = NewPaste {
         content: paste.content.clone(),
-        created_at: Some(Utc::now().naive_utc()),
     };
 
     diesel::insert_into(pastes::table)
@@ -34,7 +30,7 @@ async fn create_paste(pool: web::Data<DbPool>, paste: web::Json<NewPaste>) -> im
 
 #[get("/pastes")]
 async fn get_pastes(pool: web::Data<DbPool>) -> impl Responder {
-    let conn = pool.get().expect("couldn't get db connection from pool");
+    let mut conn = pool.get().expect("couldn't get db connection from pool");
 
     let results = pastes::table
         .load::<Paste>(&mut conn)
@@ -45,11 +41,11 @@ async fn get_pastes(pool: web::Data<DbPool>) -> impl Responder {
 
 #[get("/pastes/{id}")]
 async fn get_paste(pool: web::Data<DbPool>, id: web::Path<i32>) -> impl Responder {
-    let conn = pool.get().expect("couldn't get db connection from pool");
+    let mut conn = pool.get().expect("couldn't get db connection from pool");
 
     let result = pastes::table
         .find(id.into_inner())
-        .first::<Paste>(&conn)
+        .first::<Paste>(&mut conn)
         .optional()
         .expect("Error loading paste");
 
@@ -58,7 +54,6 @@ async fn get_paste(pool: web::Data<DbPool>, id: web::Path<i32>) -> impl Responde
         None => HttpResponse::NotFound().finish(),
     }
 }
-
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -71,7 +66,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .data(pool.clone())
+            .app_data(web::Data::new(pool.clone()))
             .service(create_paste)
             .service(get_pastes)
             .service(get_paste)
