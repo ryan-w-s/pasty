@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-actix-web = "4.8.0"
-diesel = "2.2.1"
-dotenv = "0.15.0"
-serde = "1.0.204"
-serde_json = "1.0.120"
+actix-web = "4"
+chrono = { version = "0.4", features = ["serde"] }
+diesel = { version = "2.2.1", features = ["sqlite", "r2d2"] }
+dotenv = "0.15"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
