@@ -1,4 +1,5 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_files as fs;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use dotenv::dotenv;
@@ -70,6 +71,7 @@ async fn main() -> std::io::Result<()> {
             .service(create_paste)
             .service(get_pastes)
             .service(get_paste)
+            .service(fs::Files::new("/", "frontend/dist").index_file("index.html"))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
