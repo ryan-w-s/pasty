@@ -3,6 +3,8 @@ use actix_files as fs;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use dotenv::dotenv;
+use serde::Deserialize;
+use serde_json::json;
 use std::env;
 
 mod models;
@@ -12,6 +14,12 @@ use models::{Paste, NewPaste};
 use schema::pastes;
 
 type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
+
+#[derive(Deserialize)]
+struct PaginationParams {
+    page: Option<i64>,
+    per_page: Option<i64>,
+}
 
 #[post("/pastes")]
 async fn create_paste(pool: web::Data<DbPool>, paste: web::Json<NewPaste>) -> impl Responder {
@@ -30,14 +38,31 @@ async fn create_paste(pool: web::Data<DbPool>, paste: web::Json<NewPaste>) -> im
 }
 
 #[get("/pastes")]
-async fn get_pastes(pool: web::Data<DbPool>) -> impl Responder {
+async fn get_pastes(pool: web::Data<DbPool>, params: web::Query<PaginationParams>) -> impl Responder {
     let mut conn = pool.get().expect("couldn't get db connection from pool");
 
+    let page = params.page.unwrap_or(1);
+    let per_page = params.per_page.unwrap_or(20);
+    let offset = (page - 1) * per_page;
+
     let results = pastes::table
+        .limit(per_page)
+        .offset(offset)
         .load::<Paste>(&mut conn)
         .expect("Error loading pastes");
 
-    HttpResponse::Ok().json(results)
+    // Get total count of pastes
+    let total: i64 = pastes::table.count().get_result(&mut conn).expect("Error getting total count");
+
+    let response = json!({
+        "pastes": results,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": (total as f64 / per_page as f64).ceil() as i64
+    });
+
+    HttpResponse::Ok().json(response)
 }
 
 #[get("/pastes/{id}")]
