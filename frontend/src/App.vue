@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <h1>Pasty</h1>
     <PasteList />
   </div>
 </template>

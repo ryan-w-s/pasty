@@ -1,10 +1,10 @@
 <template>
-  <div class="container mx-auto px-4">
+  <div class="container mx-auto px-4 py-8 w-full">
     <div class="grid grid-cols-1 gap-6 mt-4">
       <div
         v-for="paste in pastes"
         :key="paste.id"
-        class="bg-white shadow-md rounded-lg p-4 border-2 border-gray-200"
+        class="bg-white shadow-md rounded-lg p-4 border-2 border-gray-200 w-full"
       >
         <div class="text-sm font-semibold text-gray-600 mb-2">ID: {{ paste.id }}</div>
         <div class="text-gray-800 whitespace-pre-wrap">{{ paste.content }}</div>
