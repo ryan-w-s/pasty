@@ -46,6 +46,7 @@ async fn get_pastes(pool: web::Data<DbPool>, params: web::Query<PaginationParams
     let offset = (page - 1) * per_page;
 
     let results = pastes::table
+        .order(pastes::id.desc())
         .limit(per_page)
         .offset(offset)
         .load::<Paste>(&mut conn)

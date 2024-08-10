@@ -44,6 +44,7 @@ const currentPage = ref(1)
 const perPage = ref(20)
 const totalPages = ref(1)
 const total = ref(0)
+const emit = defineEmits(['navigate'])
 
 async function fetchPastes() {
   try {

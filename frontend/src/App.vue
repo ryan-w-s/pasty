@@ -2,7 +2,7 @@
   <div>
     <Navbar @navigate="handleNavigation" />
     <div class="container mx-auto px-4 py-8">
-      <component :is="currentView"></component>
+      <component :is="currentView" @navigate="handleNavigation"></component>
     </div>
   </div>
 </template>
